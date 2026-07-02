@@ -1,2 +1,1 @@
-# logistica
 # analise_logistica
