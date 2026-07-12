@@ -27,58 +27,41 @@ categorical_vars = [
     'sistema_abertura'
 ]
 
-# serie temporal do percntual de ineficiencia 
-
+# 1. ANALISE GERAL BASE
 base['dia_referencia'] = pd.to_datetime(pd.to_datetime(base['dia_referencia'], format='%Y-%m-%d'))
 base['mes'] = base['dia_referencia'].apply(lambda x: x.replace(day=1))
 
-agg = pd.crosstab(index= base['dia_referencia'],columns=base['ineficiencia'],values=base['ineficiencia'],aggfunc='count').sort_values(by='dia_referencia',ascending=True).reset_index()
-agg = agg.fillna(0)
-agg['%'] = agg[1]/ (agg[1] + agg[0])
-agg['total'] = agg[1] + agg[0]
+# ineficiencia geral
+base['ineficiencia'].value_counts(normalize=True) 
 
-agg[1].sum() / agg['total'].sum() # taxa de ineficiencia da base 
-
-agg_tratada = agg.loc[agg['%'] >= (agg['%'].quantile(0.25) - (agg['%'].quantile(0.75) - agg['%'].quantile(0.25)) * 1.5) ].reset_index(drop=True)
-agg_tratada = agg.loc[agg['%'] <= (agg['%'].quantile(0.75) + (agg['%'].quantile(0.75) - agg['%'].quantile(0.25)) * 1.5) ].reset_index(drop=True)
-mensal = pd.crosstab(index= base['mes'],columns=base['ineficiencia'],values=base['ineficiencia'],aggfunc='count',normalize=0).sort_values(by='mes',ascending=True).reset_index()
-
+# --- ineficiencia por mes
+agg_mes = pd.crosstab(index=base['mes'],columns=base['ineficiencia'],values=base['numero_os'],aggfunc='nunique',margins=True).reset_index()
+agg_mes['%'] = (agg_mes[1]/agg_mes['All'])*100
+agg_mes = agg_mes[:-1]
+agg_mes[['All','%']].corr()
 
 fig = plt.figure(figsize=(8, 10))
-ax = fig.add_subplot(1,2,1)
-gr1 = plt.plot(agg_tratada['dia_referencia'].values,agg_tratada['%'].values*100,linewidth=2, color='#00AEEF',label='ineficiencia')
-plt.ylabel('%')
-plt.xlabel('Meses')
-ax.spines.right.set_visible(False)
-ax.spines.top.set_visible(False)
-plt.legend()
-plt.title('Percentual de ineficiencia por dia')
+ax = fig.add_subplot()
+gr1 = plt.plot(agg1['DATA_REF'].values,agg1['agropecuario'].values,linewidth=2, color='#00AEEF',label='Agro')
 
-ax = fig.add_subplot(1,2,2)
-gr1 = plt.plot(mensal['mes'].values,mensal[1].values*100,linewidth=2, color='#00AEEF',label='ineficiencia')
+
 plt.ylabel('%')
 plt.xlabel('Meses')
 ax.spines.right.set_visible(False)
 ax.spines.top.set_visible(False)
 plt.legend()
-plt.title('Percentual de ineficiencia por mês')
+plt.title('Percentual de Republicação em 1 hora')
 plt.show()
 
 
-"""
-TEMOS EM MÉDIA 12K ORDENS DE SERVIÇO POR DIA E 797 ORDENS DE SERVIÇO INEFICIENTE POR DIA
-com uma taxa de ineficiencia de 7.4% por dia 
-utilizando uma distribuição binomial para estimativas
-"""
+""" 
+--> ANOTACOES
+* a base conta com mais de 2M de registros e cerca de 170k de registos com ineficiencia; Aproximadamente 7.4% de ineficiencia geral
+* o aumento de registros está diretamente ligado ao aumento de ineficiena - Onde está concetrado o maior aumento de registros e por consequencia de ineficiencia? - 
 
-# analise por cliente
+""" 
 
-base['ec_codcliente'].nunique() # 1.451.330 clientes
-base['ec_codcliente'].groupby(base['ineficiencia']).nunique() # 132k clientes já tiveram alguma  entrega ineficiente | 9% dos clientes
-agg_clientes = pd.crosstab(index= base['ec_codcliente'],columns=base['ineficiencia'],values=base['ineficiencia'],aggfunc='count',margins=True).reset_index()
-
-
-# analise de variáveis 
+# ANALISE DAS VARIAVEIS
 
 def cramers_v(x, y):
     confusion_matrix = pd.crosstab(x, y)
@@ -105,5 +88,8 @@ results_df = pd.DataFrame(results).sort_values('V Cramér', ascending=False)
 print(results_df)
 
 pd.crosstab(index=base['mes'],columns=[base['grupo_servico'],base['ineficiencia']],values=base['numero_os'],aggfunc='nunique',margins=True)
+
+
+# INFERENCIA 
 
 base.loc[base['grupo_servico']!= 'TROCA']['ineficiencia'].value_counts(normalize=True)
