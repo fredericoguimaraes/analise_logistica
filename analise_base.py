@@ -15,16 +15,17 @@ base = pd.read_csv('base_chamados.csv', sep=',', encoding='utf-8')
 base.describe()
 
 categorical_vars = [
+    'contratante', 
+    'operador',
+    'sistema_abertura',
+    'grupo_servico',
     'forneceu_numero_logradouro',
     'forneceu_complemento', 
     'endereco_igual_cadastro',
     'forneceu_telefone',
     'dois_telefones',
-    'grupo_servico',
-    'ineficiencia_os_anterior',
-    'contratante', 
-    'operador',
-    'sistema_abertura'
+    'ineficiencia_os_anterior'
+
 ]
 
 # 1. ANALISE GERAL BASE
