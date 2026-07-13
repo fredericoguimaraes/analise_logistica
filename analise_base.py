@@ -31,6 +31,7 @@ categorical_vars = [
 # 1. ANALISE GERAL BASE
 base['dia_referencia'] = pd.to_datetime(pd.to_datetime(base['dia_referencia'], format='%Y-%m-%d'))
 base['mes'] = base['dia_referencia'].apply(lambda x: x.replace(day=1))
+base['cadastro_completo'] =  base[['forneceu_numero_logradouro','forneceu_complemento', 'endereco_igual_cadastro','forneceu_telefone','dois_telefones']].sum(axis=1)
 
 # ineficiencia geral
 base['ineficiencia'].value_counts(normalize=True) 
@@ -45,7 +46,6 @@ fig = plt.figure(figsize=(8, 10))
 ax = fig.add_subplot()
 gr1 = plt.plot(agg1['DATA_REF'].values,agg1['agropecuario'].values,linewidth=2, color='#00AEEF',label='Agro')
 
-
 plt.ylabel('%')
 plt.xlabel('Meses')
 ax.spines.right.set_visible(False)
@@ -54,6 +54,7 @@ plt.legend()
 plt.title('Percentual de Republicação em 1 hora')
 plt.show()
 
+pd.crosstab(index=base['grupo_servico'],columns=base['ineficiencia'],values=base['numero_os'],aggfunc='nunique',margins=True,normalize=0).reset_index()
 
 """ 
 --> ANOTACOES
@@ -93,4 +94,4 @@ pd.crosstab(index=base['mes'],columns=[base['grupo_servico'],base['ineficiencia'
 
 # INFERENCIA 
 
-base.loc[base['grupo_servico']!= 'TROCA']['ineficiencia'].value_counts(normalize=True)
+base.loc[base['grupo_servico'] != 'CAÇA POS']['ineficiencia'].value_counts(normalize=True)
